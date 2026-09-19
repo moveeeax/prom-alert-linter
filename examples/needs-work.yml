@@ -1,0 +1,26 @@
+groups:
+  - name: example.rules
+    rules:
+      # Flappy: no `for:`, and no severity label for routing.
+      - alert: HighRequestLatency
+        expr: job:request_latency_seconds:mean5m{job="api"} > 0.5
+        annotations:
+          summary: API latency is high
+
+      # This one can never fire.
+      - alert: PlaceholderNeverFires
+        expr: 0
+        for: 5m
+        labels:
+          severity: warning
+
+      # A well-formed alert — the linter stays quiet about this one.
+      - alert: InstanceDown
+        expr: up == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Instance {{ $labels.instance }} down
+          description: "{{ $labels.instance }} has been down for more than 10 minutes."
+          runbook_url: https://runbooks.example.com/InstanceDown
