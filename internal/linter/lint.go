@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // ScanFiles lints the given rule files and merges the results. A file that
