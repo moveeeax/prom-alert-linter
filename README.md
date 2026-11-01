@@ -1,7 +1,7 @@
 # prom-alert-linter
 
 [![ci](https://github.com/moveeeax/prom-alert-linter/actions/workflows/ci.yml/badge.svg)](https://github.com/moveeeax/prom-alert-linter/actions/workflows/ci.yml)
-[![Go](https://img.shields.io/badge/go-1.22%2B-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Go](https://img.shields.io/badge/go-1.26%2B-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Lint Prometheus **alerting rules** for quality problems that `promtool` never checks — and get a `file:line` for each one.
@@ -16,11 +16,12 @@ Lint Prometheus **alerting rules** for quality problems that `promtool` never ch
 | `missing-severity`     | WARN | No `severity` label — Alertmanager routing usually keys on it |
 | `constant-expression`  | WARN | `expr` is a constant (`0` never fires, `1` always fires) |
 | `duplicate-name`       | WARN | The same `alert:` name is defined more than once |
+| `invalid-yaml`         | WARN | The file does not parse as YAML, so Prometheus could not load it either |
 | `missing-summary`      | INFO | No `summary` annotation |
 | `missing-description`  | INFO | No `description` annotation |
 | `missing-runbook`      | INFO | No `runbook_url` annotation — responders have nothing to open |
 
-Recording rules (`record:`) are ignored. A YAML file with no `groups:` mapping isn't a rules file and is skipped, not fatal.
+Recording rules (`record:`) are ignored. A valid YAML file with no `groups:` list isn't a rules file and is skipped, not fatal. A file that doesn't parse as YAML at all is reported as `invalid-yaml`, so a broken rules file fails the gate instead of slipping through.
 
 ## How it works
 
@@ -50,18 +51,28 @@ usage: prom-alert-linter [--json] FILE [FILE ...]
 
 ```sh
 $ prom-alert-linter examples/needs-work.yml
+INFO  examples/needs-work.yml:5  [missing-description]  alert="HighRequestLatency"
+  alert has no `description` annotation
 WARN  examples/needs-work.yml:5  [missing-for]  alert="HighRequestLatency"
   alert has no `for:` — it fires on a single scrape and will flap
   fix: add e.g. `for: 5m` so the condition must hold before firing
+INFO  examples/needs-work.yml:5  [missing-runbook]  alert="HighRequestLatency"
+  alert has no `runbook_url` annotation — responders have nothing to open
 WARN  examples/needs-work.yml:5  [missing-severity]  alert="HighRequestLatency"
   alert has no `severity` label — Alertmanager routing usually keys on it
   fix: add a `labels: { severity: warning }` (or critical/info)
+INFO  examples/needs-work.yml:11  [missing-description]  alert="PlaceholderNeverFires"
+  alert has no `description` annotation
+INFO  examples/needs-work.yml:11  [missing-runbook]  alert="PlaceholderNeverFires"
+  alert has no `runbook_url` annotation — responders have nothing to open
+INFO  examples/needs-work.yml:11  [missing-summary]  alert="PlaceholderNeverFires"
+  alert has no `summary` annotation
 WARN  examples/needs-work.yml:12  [constant-expression]  alert="PlaceholderNeverFires"
   expression is the constant 0 — this alert can never fire
 1 file(s) scanned — 3 warning(s), 5 info
 ```
 
-Wire it into CI as a gate — it exits `1` on any warning:
+Findings are sorted by file, line and rule name, so INFO and WARN lines interleave. Wire it into CI as a gate — it exits `1` on any warning:
 
 ```yaml
 - run: go run github.com/moveeeax/prom-alert-linter/cmd/prom-alert-linter@latest rules/*.yml

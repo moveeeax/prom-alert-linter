@@ -207,10 +207,20 @@ func TestNonRulesYAMLIgnored(t *testing.T) {
 	}
 }
 
-func TestMalformedYAMLSkipped(t *testing.T) {
-	rep := scan(t, "groups: [this is: not valid: mapping")
-	if len(rep.Findings) != 0 {
-		t.Fatalf("unparseable YAML should be skipped, got %+v", rep.Findings)
+func TestMalformedYAMLIsWarning(t *testing.T) {
+	rep := scan(t, "groups:\n  - name: g\n    rules: [this is: not valid: mapping\n")
+	got := findingsFor(rep, RuleInvalidYAML)
+	if len(got) != 1 {
+		t.Fatalf("unparseable YAML must yield one invalid-yaml finding, got %+v", rep.Findings)
+	}
+	if got[0].Severity != SevWarn {
+		t.Fatalf("invalid-yaml must be WARN so the CI gate fails, got %s", got[0].Severity)
+	}
+	if got[0].Line < 1 {
+		t.Fatalf("invalid-yaml must carry a line >= 1, got %d", got[0].Line)
+	}
+	if rep.WarnCount != 1 {
+		t.Fatalf("WarnCount = %d, want 1", rep.WarnCount)
 	}
 }
 
