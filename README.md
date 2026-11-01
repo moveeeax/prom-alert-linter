@@ -51,18 +51,28 @@ usage: prom-alert-linter [--json] FILE [FILE ...]
 
 ```sh
 $ prom-alert-linter examples/needs-work.yml
+INFO  examples/needs-work.yml:5  [missing-description]  alert="HighRequestLatency"
+  alert has no `description` annotation
 WARN  examples/needs-work.yml:5  [missing-for]  alert="HighRequestLatency"
   alert has no `for:` — it fires on a single scrape and will flap
   fix: add e.g. `for: 5m` so the condition must hold before firing
+INFO  examples/needs-work.yml:5  [missing-runbook]  alert="HighRequestLatency"
+  alert has no `runbook_url` annotation — responders have nothing to open
 WARN  examples/needs-work.yml:5  [missing-severity]  alert="HighRequestLatency"
   alert has no `severity` label — Alertmanager routing usually keys on it
   fix: add a `labels: { severity: warning }` (or critical/info)
+INFO  examples/needs-work.yml:11  [missing-description]  alert="PlaceholderNeverFires"
+  alert has no `description` annotation
+INFO  examples/needs-work.yml:11  [missing-runbook]  alert="PlaceholderNeverFires"
+  alert has no `runbook_url` annotation — responders have nothing to open
+INFO  examples/needs-work.yml:11  [missing-summary]  alert="PlaceholderNeverFires"
+  alert has no `summary` annotation
 WARN  examples/needs-work.yml:12  [constant-expression]  alert="PlaceholderNeverFires"
   expression is the constant 0 — this alert can never fire
 1 file(s) scanned — 3 warning(s), 5 info
 ```
 
-Wire it into CI as a gate — it exits `1` on any warning:
+Findings are sorted by file, line and rule name, so INFO and WARN lines interleave. Wire it into CI as a gate — it exits `1` on any warning:
 
 ```yaml
 - run: go run github.com/moveeeax/prom-alert-linter/cmd/prom-alert-linter@latest rules/*.yml
