@@ -16,11 +16,12 @@ Lint Prometheus **alerting rules** for quality problems that `promtool` never ch
 | `missing-severity`     | WARN | No `severity` label — Alertmanager routing usually keys on it |
 | `constant-expression`  | WARN | `expr` is a constant (`0` never fires, `1` always fires) |
 | `duplicate-name`       | WARN | The same `alert:` name is defined more than once |
+| `invalid-yaml`         | WARN | The file does not parse as YAML, so Prometheus could not load it either |
 | `missing-summary`      | INFO | No `summary` annotation |
 | `missing-description`  | INFO | No `description` annotation |
 | `missing-runbook`      | INFO | No `runbook_url` annotation — responders have nothing to open |
 
-Recording rules (`record:`) are ignored. A YAML file with no `groups:` mapping isn't a rules file and is skipped, not fatal.
+Recording rules (`record:`) are ignored. A valid YAML file with no `groups:` list isn't a rules file and is skipped, not fatal. A file that doesn't parse as YAML at all is reported as `invalid-yaml`, so a broken rules file fails the gate instead of slipping through.
 
 ## How it works
 

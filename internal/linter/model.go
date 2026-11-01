@@ -19,6 +19,7 @@ const (
 	RuleMissingRunbook     Rule = "missing-runbook"
 	RuleDuplicateName      Rule = "duplicate-name"
 	RuleConstantExpr       Rule = "constant-expression"
+	RuleInvalidYAML        Rule = "invalid-yaml"
 )
 
 // Finding is a single lint result anchored to a file and line.

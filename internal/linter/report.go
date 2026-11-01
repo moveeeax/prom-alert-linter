@@ -20,8 +20,12 @@ func (r *Report) WriteJSON(w io.Writer) error {
 // WriteText renders findings as human-readable lines plus a summary.
 func (r *Report) WriteText(w io.Writer) error {
 	for _, f := range r.Findings {
-		if _, err := fmt.Fprintf(w, "%s  %s:%d  [%s]  alert=%q\n  %s\n",
-			f.Severity, f.File, f.Line, f.Rule, f.Alert, f.Message); err != nil {
+		alert := ""
+		if f.Alert != "" {
+			alert = fmt.Sprintf("  alert=%q", f.Alert)
+		}
+		if _, err := fmt.Fprintf(w, "%s  %s:%d  [%s]%s\n  %s\n",
+			f.Severity, f.File, f.Line, f.Rule, alert, f.Message); err != nil {
 			return err
 		}
 		if f.Suggestion != "" {

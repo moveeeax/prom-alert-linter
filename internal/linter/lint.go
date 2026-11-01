@@ -12,14 +12,17 @@ import (
 	"os"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 
 	"gopkg.in/yaml.v3"
 )
 
 // ScanFiles lints the given rule files and merges the results. A file that
-// cannot be read is a hard error; a file that is not a valid rules document is
-// skipped (it is simply not an alerting-rules file).
+// cannot be read is a hard error. A file that is not valid YAML produces an
+// invalid-yaml warning, so a broken rules file fails the CI gate instead of
+// passing silently. Valid YAML without a `groups:` list is skipped (it is
+// simply not an alerting-rules file).
 func ScanFiles(paths []string) (*Report, error) {
 	rep := &Report{}
 	// Duplicate alert names are tracked across the whole run, since rules for
@@ -75,6 +78,11 @@ type alertRef struct {
 func lintFile(file string, data []byte, rep *Report) []alertRef {
 	var doc yaml.Node
 	if err := yaml.Unmarshal(data, &doc); err != nil {
+		rep.add(Finding{
+			File: file, Line: errLine(err), Severity: SevWarn, Rule: RuleInvalidYAML,
+			Message:    fmt.Sprintf("file is not valid YAML: %v", err),
+			Suggestion: "fix the syntax; Prometheus will refuse to load this file",
+		})
 		return nil
 	}
 	if len(doc.Content) == 0 {
@@ -104,6 +112,20 @@ func lintFile(file string, data []byte, rep *Report) []alertRef {
 		}
 	}
 	return refs
+}
+
+var yamlErrLine = regexp.MustCompile(`\bline (\d+):`)
+
+// errLine extracts the 1-based line number from a yaml.v3 parse error such as
+// "yaml: line 3: did not find expected key". It returns 1 when the error
+// carries no line, so the finding still points at the file.
+func errLine(err error) int {
+	if m := yamlErrLine.FindStringSubmatch(err.Error()); m != nil {
+		if n, convErr := strconv.Atoi(m[1]); convErr == nil && n > 0 {
+			return n
+		}
+	}
+	return 1
 }
 
 var constExpr = regexp.MustCompile(`^\s*(?:0|1|-?\d+(?:\.\d+)?)\s*$`)
