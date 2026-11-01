@@ -1,7 +1,7 @@
 # prom-alert-linter
 
 [![ci](https://github.com/moveeeax/prom-alert-linter/actions/workflows/ci.yml/badge.svg)](https://github.com/moveeeax/prom-alert-linter/actions/workflows/ci.yml)
-[![Go](https://img.shields.io/badge/go-1.22%2B-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Go](https://img.shields.io/badge/go-1.26%2B-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Lint Prometheus **alerting rules** for quality problems that `promtool` never checks — and get a `file:line` for each one.
