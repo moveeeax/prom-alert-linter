@@ -89,3 +89,7 @@ Findings are sorted by file, line and rule name, so INFO and WARN lines interlea
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+**Archived on 2026-11-05.** merge into prom-alert-lint: same purpose and the same core checks; prom-alert-lint validates PromQL with Prometheus's parser, checks `for` durations and recording rules, is configurable and has a GitHub Action, while this repo has a regex constant check and fixed rules. The scope moves to [prom-alert-lint](https://github.com/moveeeax/prom-alert-lint/issues/3).
